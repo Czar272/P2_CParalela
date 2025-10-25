@@ -13,7 +13,7 @@
 #include <time.h>
 #include <openssl/des.h>
 
-/* Leer todo el archivo de texto en memoria */
+// Leer todo el archivo de texto en memoria
 unsigned char *read_file(const char *path, size_t *out_size) {
     FILE *f = fopen(path, "rb");
     if (!f) { perror("fopen"); return NULL; }
@@ -29,7 +29,7 @@ unsigned char *read_file(const char *path, size_t *out_size) {
     return buf;
 }
 
-/* Escribir buffer a archivo */
+// Escribir buffer a archivo
 int write_file(const char *path, unsigned char *buf, size_t len) {
     FILE *f = fopen(path, "wb");
     if (!f) { perror("fopen write"); return -1; }
@@ -38,7 +38,7 @@ int write_file(const char *path, unsigned char *buf, size_t len) {
     return 0;
 }
 
-/* Convierte string hex (16 hex chars) a DES_cblock (8 bytes). Retorna 0 si OK. */
+// Convierte string hex (16 hex chars) a DES_cblock (8 bytes). Retorna 0 si OK.
 int hex_to_desblock(const char *hex, DES_cblock *out) {
     if (strlen(hex) != 16) return -1;
     for (int i = 0; i < 8; ++i) {
@@ -51,7 +51,7 @@ int hex_to_desblock(const char *hex, DES_cblock *out) {
     return 0;
 }
 
-/* Genera clave aleatoria de 8 bytes y ajusta paridad */
+// Genera clave aleatoria de 8 bytes y ajusta paridad
 void random_desblock(DES_cblock *out) {
     srand((unsigned)time(NULL) ^ (unsigned)getpid());
     for (int i = 0; i < 8; ++i) {
@@ -60,7 +60,7 @@ void random_desblock(DES_cblock *out) {
     DES_set_odd_parity(out);
 }
 
-/* Padding PKCS#5 (para bloque 8 bytes). Devuelve nuevo buffer y tamaño por referencia */
+// Padding PKCS#5 (para bloque 8 bytes). Devuelve nuevo buffer y tamaño por referencia
 unsigned char *apply_pkcs5(unsigned char *in, size_t in_len, size_t *out_len) {
     size_t block = 8;
     size_t pad = block - (in_len % block);
@@ -69,12 +69,12 @@ unsigned char *apply_pkcs5(unsigned char *in, size_t in_len, size_t *out_len) {
     unsigned char *out = malloc(*out_len);
     if (!out) return NULL;
     memcpy(out, in, in_len);
-    /* Relleno: cada byte con el valor 'pad' */
+    // Relleno: cada byte con el valor 'pad'
     memset(out + in_len, (unsigned char)pad, pad);
     return out;
 }
 
-/* Cifrado DES ECB in-place (buf length múltiplo de 8), usando key schedule */
+// Cifrado DES ECB in-place (buf length multiplo de 8), usando key schedule
 void des_ecb_encrypt_buffer(unsigned char *buf, size_t len, DES_key_schedule *ks) {
     DES_cblock inblk, outblk;
     for (size_t off = 0; off < len; off += 8) {
@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
         printf("\n");
     } else {
         if (hex_to_desblock(keyarg, &key) != 0) {
-            fprintf(stderr, "key_hex inválida. Debe ser 16 hex chars (ej: 133457799BBCDFF1) o 'random'\n");
+            fprintf(stderr, "key_hex invalida. Debe ser 16 hex chars (ej: 133457799BBCDFF1) o 'random'\n");
             free(plain); free(padded); return 1;
         }
     }
@@ -127,7 +127,6 @@ int main(int argc, char **argv) {
 
     printf("Archivo cifrado escrito en: %s (tamaño %zu bytes)\n", outpath, padded_len);
 
-    /* Liberar */
     free(plain);
     free(padded);
     return 0;
