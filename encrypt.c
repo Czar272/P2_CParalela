@@ -1,5 +1,5 @@
 /* Compilar: gcc -O2 -o encrypt encrypt.c -lcrypto
- * Corer: ./des_encrypt <input_txt> <output_cipher_bin> <key_hex|random>
+ * Corer: ./encrypt <input_txt> <output_cipher_bin> <key_hex|random>
  *
  * Ejemplos:
  *   ./encrypt plain.txt cipher.bin 133457799BBCDFF1
