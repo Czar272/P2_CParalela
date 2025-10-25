@@ -38,7 +38,8 @@ int write_file(const char *path, unsigned char *buf, size_t len) {
     return 0;
 }
 
-// Convierte string hex (16 hex chars) a DES_cblock (8 bytes). Retorna 0 si OK.
+// Funcion por si dan key
+// Convierte string hex (16 hex chars) a DES_cblock (8 bytes).
 int hex_to_desblock(const char *hex, DES_cblock *out) {
     if (strlen(hex) != 16) return -1;
     for (int i = 0; i < 8; ++i) {
@@ -51,6 +52,7 @@ int hex_to_desblock(const char *hex, DES_cblock *out) {
     return 0;
 }
 
+// Funcion para generar key
 // Genera clave aleatoria de 8 bytes y ajusta paridad
 void random_desblock(DES_cblock *out) {
     srand((unsigned)time(NULL) ^ (unsigned)getpid());
