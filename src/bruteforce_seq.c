@@ -5,6 +5,10 @@
  *   ./bruteforce_seq cipher.bin "es una prueba de" 24
  */
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 199309L
 #endif
@@ -17,6 +21,22 @@
 #include <openssl/des.h>
 
 #define PROGRESS_STEP 1000000ULL
+
+/* set_odd_parity: asegura paridad impar por byte en un bloque de 8 bytes */
+static void set_odd_parity(unsigned char out[8]) {
+    for (int i = 0; i < 8; ++i) {
+#ifdef __GNUC__
+        int ones = __builtin_popcount((unsigned int)(out[i] >> 1));
+#else
+        unsigned char v = out[i] >> 1;
+        int ones = 0;
+        while (v) { ones += v & 1; v >>= 1; }
+#endif
+        unsigned char parity_bit = (ones % 2 == 0) ? 1 : 0;
+        out[i] = (out[i] & 0xFE) | parity_bit;
+    }
+}
+
 
 // lee todo el archivo en memoria, devuelve tamaño en out_size 
 unsigned char *read_file(const char *path, size_t *out_size) {
@@ -63,7 +83,7 @@ void uint64_to_desblock(uint64_t v, DES_cblock *out) {
         v >>= 8;
     }
     // Luego establecemos bits de paridad (DES espera parity bits por byte)
-    DES_set_odd_parity(out);
+    set_odd_parity(*out);
 }
 
 // descifra buffer (enplace) usando la subkey schedule, ECB por bloques de 8 
