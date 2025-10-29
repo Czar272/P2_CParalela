@@ -6,9 +6,13 @@
 #include <stdint.h>
 #include <openssl/des.h>
 
+
+
 static void u64_to_des_key(uint64_t k, DES_cblock *key) {
-    // mapear entero -> 8 bytes (big-endian) y fijar paridad impar
-    for (int i = 7; i >= 0; --i) { (*key)[i] = (unsigned char)(k & 0xFF); k >>= 8; }
+    for (int i = 0; i < 8; ++i) {          // LSB primero
+        (*key)[i] = (unsigned char)(k & 0xFF);
+        k >>= 8;
+    }
     DES_set_odd_parity(key);
 }
 
