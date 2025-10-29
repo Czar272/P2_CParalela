@@ -4,9 +4,16 @@
 CC = gcc
 MPICC = mpicc
 CFLAGS = -O2 -Wall
-FRAMEWORKS = -framework Security
 BUILDDIR = build
 SRCDIR = src
+
+OS := $(shell uname -s)
+
+ifeq ($(OS),Darwin)
+    CRYPTO_LIBS = -framework Security
+else
+    CRYPTO_LIBS = -lcrypto
+endif
 
 # Targets
 .PHONY: all clean sequential parallel bruteforce
@@ -20,20 +27,23 @@ parallel: $(BUILDDIR)/bruteforce_mpi
 # Bruteforce del catedrático (adaptado para macOS)
 bruteforce: $(BUILDDIR)/bruteforce
 
-$(BUILDDIR)/bruteforce: $(SRCDIR)/bruteforce.c
-	$(MPICC) $(CFLAGS) -o $@ $< -lssl -lcrypto
+$(BUILDDIR):
+	mkdir -p $(BUILDDIR)
+
+$(BUILDDIR)/bruteforce: $(SRCDIR)/bruteforce.c | $(BUILDDIR)
+	$(MPICC) $(CFLAGS) -o $@ $< $(CRYPTO_LIBS)
 
 # Bruteforce secuencial
-$(BUILDDIR)/bruteforce_seq: $(SRCDIR)/bruteforce_seq.c
-	$(CC) $(CFLAGS) -o $@ $< $(FRAMEWORKS)
+$(BUILDDIR)/bruteforce_seq: $(SRCDIR)/bruteforce_seq.c | $(BUILDDIR)
+	$(CC) $(CFLAGS) -o $@ $< $(CRYPTO_LIBS)
 
 # Programa de cifrado
-$(BUILDDIR)/encrypt: $(SRCDIR)/encrypt.c
-	$(CC) $(CFLAGS) -o $@ $< $(FRAMEWORKS)
+$(BUILDDIR)/encrypt: $(SRCDIR)/encrypt.c | $(BUILDDIR)
+	$(CC) $(CFLAGS) -o $@ $< $(CRYPTO_LIBS)
 
 # Bruteforce paralelo con MPI (por implementar)
-$(BUILDDIR)/bruteforce_mpi: $(SRCDIR)/bruteforce_mpi.c
-	$(MPICC) $(CFLAGS) -o $@ $< $(FRAMEWORKS)
+$(BUILDDIR)/bruteforce_mpi: $(SRCDIR)/bruteforce_mpi.c | $(BUILDDIR)
+	$(MPICC) $(CFLAGS) -o $@ $< $(CRYPTO_LIBS)
 
 # Limpiar
 clean:
