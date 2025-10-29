@@ -6,7 +6,31 @@
 #include <stdlib.h>
 #include <mpi.h>
 #include <unistd.h>
-#include <rpc/des_crypt.h>
+#include <openssl/des.h>
+
+// Compatibilidad con rpc/des_crypt.h usando OpenSSL
+void des_setparity(char *key) {
+    DES_set_odd_parity((DES_cblock*)key);
+}
+
+void ecb_crypt(char *key, char *data, int len, int mode) {
+    DES_key_schedule schedule;
+    DES_cblock *blocks = (DES_cblock*)data;
+    int num_blocks = len / 8;
+    
+    DES_set_key_unchecked((DES_cblock*)key, &schedule);
+    
+    for(int i = 0; i < num_blocks; i++) {
+        if(mode == DES_DECRYPT) {
+            DES_ecb_encrypt(&blocks[i], &blocks[i], &schedule, DES_DECRYPT);
+        } else {
+            DES_ecb_encrypt(&blocks[i], &blocks[i], &schedule, DES_ENCRYPT);
+        }
+    }
+}
+
+#define DES_DECRYPT 0
+#define DES_ENCRYPT 1
 
 void decrypt(long key, char *ciph, int len){
   //set parity of key and do decrypt
@@ -19,7 +43,7 @@ void decrypt(long key, char *ciph, int len){
   ecb_crypt((char *)&k, (char *) ciph, 16, DES_DECRYPT);
 }
 
-void encrypt(long key, char *ciph, int len){
+void my_encrypt(long key, char *ciph, int len){
   //set parity of key and do decrypt
   long k = 0;
   for(int i=0; i<8; ++i){

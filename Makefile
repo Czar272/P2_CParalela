@@ -9,13 +9,19 @@ BUILDDIR = build
 SRCDIR = src
 
 # Targets
-.PHONY: all clean sequential parallel
+.PHONY: all clean sequential parallel bruteforce
 
 all: sequential
 
 sequential: $(BUILDDIR)/bruteforce_seq $(BUILDDIR)/encrypt
 
 parallel: $(BUILDDIR)/bruteforce_mpi
+
+# Bruteforce del catedrático (adaptado para macOS)
+bruteforce: $(BUILDDIR)/bruteforce
+
+$(BUILDDIR)/bruteforce: $(SRCDIR)/bruteforce.c
+	$(MPICC) $(CFLAGS) -o $@ $< -lssl -lcrypto
 
 # Bruteforce secuencial
 $(BUILDDIR)/bruteforce_seq: $(SRCDIR)/bruteforce_seq.c
@@ -54,3 +60,24 @@ test-project: sequential
 	./$(BUILDDIR)/encrypt files/plain.txt files/cipher_big1.bin 18014398509481983
 	./$(BUILDDIR)/encrypt files/plain.txt files/cipher_big2.bin 18014398509481984
 	@echo "=== Archivos generados: cipher_123456.bin, cipher_big1.bin, cipher_big2.bin ==="
+
+# Pruebas específicas del proyecto con 4 procesos
+test-parte-b: sequential parallel test-project
+	@echo "=== PRUEBAS PARTE B DEL PROYECTO (4 procesos) ==="
+	@echo "Parte B.2.a - Clave 123456L (secuencial):"
+	time ./$(BUILDDIR)/bruteforce_seq files/cipher_123456.bin "es una prueba de" 24
+	@echo ""
+	@echo "Parte B.2.a - Clave 123456L (paralelo 4 procesos):"
+	time mpirun -np 4 ./$(BUILDDIR)/bruteforce_mpi files/cipher_123456.bin "es una prueba de" 24
+
+# Análisis de speedup con diferentes números de procesos
+speedup-analysis: sequential parallel test-project
+	@echo "=== ANÁLISIS DE SPEEDUP ==="
+	@echo "1 proceso:"
+	time mpirun -np 1 ./$(BUILDDIR)/bruteforce_mpi files/cipher_123456.bin "es una prueba de" 20
+	@echo ""
+	@echo "2 procesos:"
+	time mpirun -np 2 ./$(BUILDDIR)/bruteforce_mpi files/cipher_123456.bin "es una prueba de" 20
+	@echo ""
+	@echo "4 procesos:"
+	time mpirun -np 4 ./$(BUILDDIR)/bruteforce_mpi files/cipher_123456.bin "es una prueba de" 20

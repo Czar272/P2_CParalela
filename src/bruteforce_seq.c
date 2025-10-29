@@ -1,9 +1,8 @@
-/* Bruteforce DES Secuencial - Proyecto 2 Computación Paralela
- * Compilar: make sequential
- * Uso: ./build/bruteforce_seq <archivo_cifrado> "<frase_clave>" <bits_clave> [inicio] [fin]
+/* Compilar: gcc -O2 -o bruteforce_seq bruteforce_seq.c -lcrypto
+ * Correr: ./bruteforce_seq <cipher_file> "<key_phrase>" <key_bits> [start] [end]
  *
  * Ejemplo:
- *   ./build/bruteforce_seq files/cipher.bin "es una prueba de" 24
+ *   ./bruteforce_seq cipher.bin "es una prueba de" 24
  */
 
 #ifndef _GNU_SOURCE
@@ -19,7 +18,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
-#include <CommonCrypto/CommonCryptor.h>
+#include <openssl/des.h>
 
 #define PROGRESS_STEP 1000000ULL
 
@@ -53,6 +52,7 @@ static void set_odd_parity(unsigned char out[8]) {
         out[i] = (out[i] & 0xFE) | parity_bit;
     }
 }
+
 
 // lee todo el archivo en memoria, devuelve tamaño en out_size 
 unsigned char *read_file(const char *path, size_t *out_size) {
@@ -91,42 +91,25 @@ unsigned char *read_file(const char *path, size_t *out_size) {
     return buf;
 }
 
-// convierte un entero de 0..(2^56-1) a clave DES (8 bytes)
-void uint64_to_desblock(uint64_t v, unsigned char *out) {
+// convierte un entero de 0..(2^56-1) a DES_cblock (8 bytes)
+void uint64_to_desblock(uint64_t v, DES_cblock *out) {
     // Llenamos los 8 bytes con el valor
     for (int i = 0; i < 8; ++i) {
-        out[i] = (unsigned char)(v & 0xFFULL);
+        (*out)[i] = (unsigned char)(v & 0xFFULL);
         v >>= 8;
     }
     // Luego establecemos bits de paridad (DES espera parity bits por byte)
-    set_odd_parity(out);
+    set_odd_parity(*out);
 }
 
-// descifra buffer (en lugar) usando CommonCrypto DES ECB
-void des_ecb_decrypt_buffer(unsigned char *buf, size_t len, unsigned char *key) {
-    // CommonCrypto no soporta operaciones in-place con ECB muy bien,
-    // así que usamos un buffer temporal
-    unsigned char *temp = malloc(len);
-    if (!temp) return;
-    
-    size_t dataOutMoved = 0;
-    CCCryptorStatus status = CCCrypt(kCCDecrypt,           // operation
-                                     kCCAlgorithmDES,      // algorithm  
-                                     kCCOptionECBMode,     // options
-                                     key,                  // key
-                                     8,                    // key length
-                                     NULL,                 // IV
-                                     buf,                  // input
-                                     len,                  // input length
-                                     temp,                 // output
-                                     len,                  // output buffer size
-                                     &dataOutMoved);       // output bytes
-    
-    if (status == kCCSuccess) {
-        memcpy(buf, temp, len);
+// descifra buffer (enplace) usando la subkey schedule, ECB por bloques de 8 
+void des_ecb_decrypt_buffer(unsigned char *buf, size_t len, DES_key_schedule *ks) {
+    DES_cblock inblk, outblk;
+    for (size_t off = 0; off < len; off += 8) {
+        memcpy(inblk, buf + off, 8);
+        DES_ecb_encrypt(&inblk, &outblk, ks, DES_DECRYPT);
+        memcpy(buf + off, outblk, 8);
     }
-    
-    free(temp);
 }
 
 double now_seconds() {
@@ -188,16 +171,20 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    unsigned char keyblock[8];
+    DES_cblock keyblock;
+    DES_key_schedule ks;
     uint64_t checked = 0;
 
     for (uint64_t k = start; k < end; ++k) {
         // convertir k a bloque DES y setear paridad 
-        uint64_to_desblock(k, keyblock);
+        uint64_to_desblock(k, &keyblock);
+
+        // preparar schedule (no chequea weak keys) 
+        DES_set_key_unchecked(&keyblock, &ks);
 
         // copiar buffer cifrado y descifrarlo en workbuf 
         memcpy(workbuf, cipher, cipher_len);
-        des_ecb_decrypt_buffer(workbuf, cipher_len, keyblock);
+        des_ecb_decrypt_buffer(workbuf, cipher_len, &ks);
 
         // buscar frase clave
         if (memmem(workbuf, cipher_len, key_phrase, strlen(key_phrase)) != NULL) {
