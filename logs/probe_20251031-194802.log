@@ -1,0 +1,46 @@
+[DEBUG master] cipher_path=/dev/zero keyword=nosuchkeyword start=0 end=999999 chunk=65536
+[DEBUG worker 1] inicio
+[DEBUG worker 1] after recv clen=0
+[DEBUG worker 2] inicio
+[DEBUG worker 2] after recv clen=0
+[DEBUG worker 3] inicio
+[DEBUG worker 3] after recv clen=0
+[DEBUG worker 3] after recv cipher first_byte=0x00 len=0
+[DEBUG worker 3] probe saw TAG_WORK from master
+[DEBUG worker 3] recv work start=262144 len=65536 seed=2549586501465883397
+[DEBUG worker 3] probe saw TAG_WORK from master
+[DEBUG worker 3] recv work start=458752 len=65536 seed=9087306089425859419
+[DEBUG worker 3] probe saw TAG_WORK from master
+[DEBUG worker 3] recv work start=589824 len=65536 seed=1432557281931089419
+[DEBUG worker 3] probe saw TAG_WORK from master
+[DEBUG worker 3] recv work start=720896 len=65536 seed=17355906876899391007
+[DEBUG worker 3] probe saw TAG_WORK from master
+[DEBUG worker 3] recv work start=851968 len=65536 seed=3683131903443997632
+[DEBUG worker 3] probe saw TAG_WORK from master
+[DEBUG worker 3] recv work start=983040 len=16960 seed=15532937955411805307
+[DEBUG master] after bcast clen=0
+[DEBUG master] cipher size bytes = 0
+[DEBUG master] after bcast cipher bytes sent
+[DEBUG worker 1] after recv cipher first_byte=0x00 len=0
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=0 len=65536 seed=12562958186386969003
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=65536 len=65536 seed=2895413872830151578
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=131072 len=65536 seed=3347260409690410863
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=196608 len=65536 seed=5730526432524666374
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=327680 len=65536 seed=11631307097655150356
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=393216 len=65536 seed=4041759073369335296
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=524288 len=65536 seed=9824869042488504117
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=655360 len=65536 seed=12222586210516260394
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=786432 len=65536 seed=8734701884733922185
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=917504 len=65536 seed=11292327514454308459
+[MASTER] NOT FOUND in range
+[DEBUG worker 2] after recv cipher first_byte=0x00 len=0

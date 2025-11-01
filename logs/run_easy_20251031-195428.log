@@ -1,0 +1,98 @@
+[DEBUG worker 3] inicio
+[DEBUG worker 3] after recv clen=0
+[DEBUG master] cipher_path=./files/cipher_easy.bin keyword=es una prueba de start=36028797008963969 end=36028797028963968 chunk=262144
+[DEBUG master] after bcast clen=40
+[DEBUG worker 1] inicio
+[DEBUG worker 1] after recv clen=0
+[DEBUG worker 2] inicio
+[DEBUG worker 2] after recv clen=0
+[DEBUG worker 2] after recv cipher first_byte=0xdd len=40
+[DEBUG worker 1] after recv cipher first_byte=0xdd len=40
+[DEBUG worker 2] probe saw TAG_WORK from master
+[DEBUG worker 2] recv work start=36028797008963969 len=262144 seed=5362758151426240529
+[DEBUG worker 3] after recv cipher first_byte=0xdd len=40
+[DEBUG worker 3] probe saw TAG_WORK from master
+[DEBUG worker 3] recv work start=36028797009488257 len=262144 seed=15600593685216719136
+[DEBUG master] cipher size bytes = 40
+[DEBUG master] after bcast cipher bytes sent
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=36028797009226113 len=262144 seed=3709030732229239355
+[DEBUG worker 2] probe saw TAG_WORK from master
+[DEBUG worker 2] recv work start=36028797009750401 len=262144 seed=13998546045570081426
+[DEBUG worker 3] probe saw TAG_WORK from master
+[DEBUG worker 3] recv work start=36028797010012545 len=262144 seed=243551847713606326
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=36028797010274689 len=262144 seed=17967269403074857479
+[DEBUG worker 2] probe saw TAG_WORK from master
+[DEBUG worker 2] recv work start=36028797010536833 len=262144 seed=7414947567937453318
+[DEBUG worker 3] probe saw TAG_WORK from master
+[DEBUG worker 3] recv work start=36028797010798977 len=262144 seed=7156856697113803509
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=36028797011061121 len=262144 seed=12806101238425484087
+[DEBUG worker 2] probe saw TAG_WORK from master
+[DEBUG worker 2] recv work start=36028797011323265 len=262144 seed=1235961282485850793
+[DEBUG worker 3] probe saw TAG_WORK from master
+[DEBUG worker 3] recv work start=36028797011585409 len=262144 seed=18099302792835528137
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=36028797011847553 len=262144 seed=12309255257046902985
+[DEBUG worker 2] probe saw TAG_WORK from master
+[DEBUG worker 2] recv work start=36028797012109697 len=262144 seed=12217564525640698232
+[DEBUG worker 3] probe saw TAG_WORK from master
+[DEBUG worker 3] recv work start=36028797012371841 len=262144 seed=9069335495176123905
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=36028797012633985 len=262144 seed=10896914560182471996
+[DEBUG worker 2] probe saw TAG_WORK from master
+[DEBUG worker 2] recv work start=36028797012896129 len=262144 seed=8254947656297467830
+[DEBUG worker 3] probe saw TAG_WORK from master
+[DEBUG worker 3] recv work start=36028797013158273 len=262144 seed=1339026415054065954
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=36028797013420417 len=262144 seed=2354092907824223592
+[DEBUG worker 2] probe saw TAG_WORK from master
+[DEBUG worker 2] recv work start=36028797013682561 len=262144 seed=476678019058450231
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=36028797013944705 len=262144 seed=18342658632010752836
+[DEBUG worker 3] probe saw TAG_WORK from master
+[DEBUG worker 3] recv work start=36028797014206849 len=262144 seed=6018175891232222306
+[DEBUG worker 2] probe saw TAG_WORK from master
+[DEBUG worker 2] recv work start=36028797014468993 len=262144 seed=7548653679150119434
+[DEBUG worker 3] probe saw TAG_WORK from master
+[DEBUG worker 3] recv work start=36028797014731137 len=262144 seed=7598253864815790383
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=36028797014993281 len=262144 seed=15048468121665091222
+[DEBUG worker 2] probe saw TAG_WORK from master
+[DEBUG worker 2] recv work start=36028797015255425 len=262144 seed=4736203870187142105
+[DEBUG worker 3] probe saw TAG_WORK from master
+[DEBUG worker 3] recv work start=36028797015517569 len=262144 seed=13589325441798725326
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=36028797015779713 len=262144 seed=248491333964009607
+[DEBUG worker 2] probe saw TAG_WORK from master
+[DEBUG worker 2] recv work start=36028797016041857 len=262144 seed=9836226334670141546
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=36028797016304001 len=262144 seed=14530569132152298063
+[DEBUG worker 3] probe saw TAG_WORK from master
+[DEBUG worker 3] recv work start=36028797016566145 len=262144 seed=1098332609563694866
+[DEBUG worker 2] probe saw TAG_WORK from master
+[DEBUG worker 2] recv work start=36028797016828289 len=262144 seed=6885960137983214094
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=36028797017090433 len=262144 seed=12572857104426224279
+[DEBUG worker 3] probe saw TAG_WORK from master
+[DEBUG worker 3] recv work start=36028797017352577 len=262144 seed=11560075366880579014
+[DEBUG worker 2] probe saw TAG_WORK from master
+[DEBUG worker 2] recv work start=36028797017614721 len=262144 seed=716692667192982829
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=36028797017876865 len=262144 seed=12055910920819230447
+[DEBUG worker 3] probe saw TAG_WORK from master
+[DEBUG worker 3] recv work start=36028797018139009 len=262144 seed=15845507553550239256
+[DEBUG worker 2] probe saw TAG_WORK from master
+[DEBUG worker 2] recv work start=36028797018401153 len=262144 seed=9012405928387762518
+[DEBUG worker 1] probe saw TAG_WORK from master
+[DEBUG worker 1] recv work start=36028797018663297 len=262144 seed=3715745644058738780
+[DEBUG worker 3] probe saw TAG_WORK from master
+[DEBUG worker 3] recv work start=36028797018925441 len=262144 seed=5168432621234568140
+[DEBUG worker 2] probe saw TAG_WORK from master
+[DEBUG worker 2] recv work start=36028797019187585 len=262144 seed=5241387347787637661
+[DEBUG master] pedido de trabajo recibido de 3
+[MASTER] FOUND key = 36028797019029504
+[WORKER 3] winner=36028797019029504
+[WORKER 1] winner=36028797019029504
+[WORKER 2] winner=36028797019029504

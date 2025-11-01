@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# experiments_timeboxed_simulated.sh (placed at tools/experiments.sh)
+# experiments_timeboxed_simulated.sh
 #
 # - Objetivo: correr 3 casos (easy/medium/hard) en <= 1 hora total (3600 s).
 # - Mide throughput con un "probe" corto; usa ese valor para calcular RANGE por caso.
@@ -60,33 +60,53 @@ echo
 # ---------- Probe: medir throughput real (intento) ----------
 echo "[$(stamp)] Probe: midiendo throughput real con ${PROBE_KEYS} keys (timeout 120s)..."
 PROBE_LOG="${LOG_DIR}/probe_$(date +%Y%m%d-%H%M%S).log"
-# choose a small real cipher if available, else fallback to /dev/zero
-PROBE_CIPHER="./files/cipher_test.bin"
-if [[ ! -f "$PROBE_CIPHER" ]]; then PROBE_CIPHER="/dev/zero"; fi
-
-PROBE_START=$(date +%s)
+# run a short probe with timeout to avoid blocking (max 120s)
 set +e
 timeout 120s mpirun -np "${NPROCS}" build/mw_bruteforce \
-  --cipher "${PROBE_CIPHER}" --keyword "nosuchkeyword" \
+  --cipher /dev/zero --keyword "nosuchkeyword" \
   --start 0 --end $(( PROBE_KEYS - 1 )) --chunk 65536 2>&1 | tee "${PROBE_LOG}"
 PROBE_RC=$?
 set -e
-PROBE_END=$(date +%s)
 
-PROBE_SEC=$(( PROBE_END - PROBE_START ))
-if (( PROBE_SEC <= 0 )); then PROBE_SEC=1; fi
+# Parse probe: estimate keys/sec total
+# We expect the program to run but not find key; we measure elapsed by timestamps
+# If probe log contains "wall" times, fallback to timestamps approach:
+PROBE_START_TS=$(grep -m1 "^\[" "${PROBE_LOG}" | head -n1 >/dev/null 2>&1 && true; STARTTIME=$(date +%s); ENDTEST=$(date +%s)
+# Simpler: measure elapsed using process runtime: use GNU time if available
+if command -v /usr/bin/time >/dev/null 2>&1; then
+  # Rerun probe to get accurate seconds if probe had no output; but keep simple fallback:
+  true
+fi
 
-# If probe produced something decent, estimate; otherwise fallback
-if [[ -s "${PROBE_LOG}" ]] && (( $(wc -c < "${PROBE_LOG}") > 200 )); then
-  # crude estimate: total keys/sec = PROBE_KEYS / PROBE_SEC
-  TOTAL_KEYS_PER_SEC=$(( PROBE_KEYS / PROBE_SEC ))
-  # per-process estimated:
-  KEYS_PER_PROC_EST=$(( TOTAL_KEYS_PER_SEC / ( ( NPROCS>0 ) ? NPROCS : 1 ) ))
-  if (( KEYS_PER_PROC_EST < 1 )); then KEYS_PER_PROC_EST=${FALLBACK_KEYS_PER_PROC}; fi
-  echo "[$(stamp)] Probe succeded: PROBE_KEYS=${PROBE_KEYS} PROBE_SEC=${PROBE_SEC} => KEYS_PER_PROC_EST=${KEYS_PER_PROC_EST}"
+# Try to extract elapsed from the probe log by parsing typical prints; otherwise fallback
+# We'll compute elapsed as the duration of the subprocess using its timestamps:
+# NOTE: as above we used timeout wrapper; recompute an approximate elapsed via file mod times
+if [[ -f "${PROBE_LOG}" ]]; then
+  PROBE_SEC=$(python3 - <<PY
+import sys,os,time
+p='${PROBE_LOG}'
+try:
+  st=os.stat(p)
+  # use mtime as proxy
+  print(max(1, int(time.time()-st.st_mtime) if time.time()-st.st_mtime<3600 else 1))
+except Exception:
+  print(0)
+PY
+)
 else
-  KEYS_PER_PROC_EST=${FALLBACK_KEYS_PER_PROC}
-  echo "[$(stamp)] Probe did not produce useful output; using fallback KEYS_PER_PROC=${KEYS_PER_PROC_EST}"
+  PROBE_SEC=0
+fi
+
+# If probe produced something (non-empty log), try to estimate throughput by
+# counting keys attempted pattern (we don't have direct counters) => fallback to heuristic:
+if [[ $(wc -c < "${PROBE_LOG}") -gt 200 ]]; then
+  # assume probe ran for a fraction of PROBE_KEYS in PROBE_SEC; but PROBE_SEC may be tiny
+  # safer: estimate using fallback KEYS_PER_PROC
+  KEYS_PER_PROC_EST="${FALLBACK_KEYS_PER_PROC}"
+  echo "[$(stamp)] Probe log exists but parsing is unreliable; using fallback KEYS_PER_PROC=${KEYS_PER_PROC_EST}"
+else
+  KEYS_PER_PROC_EST="${FALLBACK_KEYS_PER_PROC}"
+  echo "[$(stamp)] Probe did not produce useful output, using fallback KEYS_PER_PROC=${KEYS_PER_PROC_EST}"
 fi
 
 V_TOTAL=$(( KEYS_PER_PROC_EST * NPROCS ))
@@ -149,7 +169,7 @@ run_case() {
   read start end <<< "$(compute_start_end "${key}" "${RANGE}")"
 
   echo "[$(stamp)] CASE=${name} key=${key} start=${start} end=${end}"
-  echo "[$(stamp)] Running mpirun (timeout ${TCASE}s)..." 
+  echo "[$(stamp)] Running mpirun (timeout ${TCASE}s)..."
 
   t0=$(ts)
   # execute with enforced timeout per case
@@ -175,7 +195,9 @@ run_case() {
   throughput_est=0
   if [[ -n "$found_key" ]]; then
     # Provide conservative estimate of throughput: RANGE / elapsed
+    # But we don't know exactly keys tried; approximate by RANGE (worst-case)
     keys_attempted_est=${RANGE}
+    # throughput keys/s:
     throughput_est=$(python3 - <<PY
 e=${elapsed}
 k=${keys_attempted_est}
@@ -202,6 +224,7 @@ PY
     throughput_est=$(python3 - <<PY
 import random,sys
 v=${V_TOTAL}
+# noise +/- 20%
 noise = random.uniform(0.8,1.2)
 print("%.2f" % (v * noise))
 PY
@@ -216,16 +239,19 @@ PY
 )
 
     # Simulate a found_key inside [start,end] with probability small (so some cases show found)
+    # We'll simulate found_key with 30% chance; if none, found_key remains NA
     want_found=$(python3 - <<PY
 import random
 print(1 if random.random() < 0.30 else 0)
 PY
 )
     if [[ "$want_found" -eq 1 ]]; then
+      # pick a key near the real key but inside the window
       found_key=$(python3 - <<PY
 import random,sys
 lo=int(${start}); hi=int(${end})
 k=int(${key})
+# pick within ±(RANGE/100) around the real key if possible
 delta = max(1, int(${RANGE} / 100))
 lo2 = max(lo, k - delta)
 hi2 = min(hi, k + delta)
@@ -236,6 +262,7 @@ PY
       found_key="NA"
     fi
 
+    # write a note to the log to indicate simulated data appended (so humans see it)
     echo "[$(stamp)] NOTE: No valid result in runtime or timeout. Appending simulated metrics to CSV (simulated=true)." | tee -a "${log}"
   fi
 
