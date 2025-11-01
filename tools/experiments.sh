@@ -6,7 +6,7 @@
 # export NPROCS=8
 # export CHUNK=1048576
 
-# ./experiments.sh
+# ./tools/experiments.sh
 
 set -euo pipefail
 
