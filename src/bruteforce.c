@@ -234,6 +234,7 @@ int main(int argc, char *argv[]) {
             printf("RESULT: NOT FOUND\n");
             printf("\nTime(s) : %.6f\n", (t1 - t0));
         }
+        printf("Tiempo de ejecucion del algoritmo : %.6f\n", (t1 - t0));
     }
 
     free(cipher);
