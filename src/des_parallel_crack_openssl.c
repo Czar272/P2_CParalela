@@ -214,7 +214,7 @@ int main(int argc, char *argv[]) {
         int flag;
         MPI_Test(&req, &flag, &st);
         if (!flag) {
-            // Esperar un poco más por si hay mensaje en tránsito
+            // Esperar un poco mas por si hay mensaje en transito
             MPI_Wait(&req, &st);
         }
     }

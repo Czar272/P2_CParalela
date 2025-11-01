@@ -1,5 +1,4 @@
 // src/bruteforce.c
-// Brute force DES (ECB) en MPI usando OpenSSL.
 // Uso: mpirun -np P ./bruteforce <cipher.bin> "<frase a buscar>" <bits>
 
 #include <stdio.h>
@@ -188,13 +187,9 @@ int main(int argc, char *argv[]) {
             MPI_Status st;
             MPI_Test(&req, &done, &st);
             if (done) {
-                // Aceptar formalmente (opcional, ya tenemos found_msg escrito)
+                // Aceptar formalmente
                 MPI_Wait(&req, &st);  // <- uso explícito de MPI_Wait
                 stop = 1;
-
-                // re-post por si llegaran llaves duplicadas (no obligatorio)
-                // MPI_Irecv(&found_msg, 1, MPI_LONG, MPI_ANY_SOURCE, 101, comm, &req);
-                // have_recv_posted = 1;
             }
         }
 
@@ -211,8 +206,7 @@ int main(int argc, char *argv[]) {
     if (rank == 0) {
         if (stop && found_msg != 0) {
             winner_key = found_msg;
-            // Nota: si quieres conocer el rank exacto del ganador, puedes
-            // hacer que el emisor mande un par (key, rank) o un tag por rank.
+    
         }
     }
 
