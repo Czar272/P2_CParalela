@@ -1,10 +1,10 @@
 /**
  * Compilar:
- * mpicc -O2 -std=c11 -o mw_bruteforce mw_bruteforce.c -lcrypto
+ * mpicc -O2 -std=c11 -o build/mw_bruteforce src/mw_bruteforce.c -lcrypto
  *
- * Correr:
- * mpirun -np 4 ./mw_bruteforce \
-  --cipher ciphertext.bin \
+ * Correr:start=1067450368
+ * mpirun -np 4 ./build/mw_bruteforce \
+  --cipher files/cipher.bin \
   --keyword "es una prueba de" \
   --start 0 --end 72057594037927935 \
   --chunk 1048576
