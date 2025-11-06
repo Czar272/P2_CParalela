@@ -120,10 +120,10 @@ static int contains_subsequence(const unsigned char *hay, size_t haylen,
 
 // Convierte u64 key (56 bits) a DES_cblock (8 bytes) y ajusta paridad
 static void u64_to_des_key(u64 key, DES_cblock *out) {
-  // rellenamos los 8 bytes con los 64 bits de 'key'
+  // rellenamos los 8 bytes con los 64 bits de 'key' (LSB primero, igual que bruteforce_mpi)
   for (int i = 0; i < 8; ++i) {
-    // Extraemos de MSB a LSB para formar el bloque en orden de bytes
-    (*out)[7 - i] = (unsigned char)((key >> (i * 8)) & 0xFFULL);
+    (*out)[i] = (unsigned char)(key & 0xFFULL);
+    key >>= 8;
   }
   // Ajusta bits de paridad en el bloque
   DES_set_odd_parity(out);
@@ -172,15 +172,9 @@ static int search_chunk_random(u64 start, u64 len, u64 seed,
   if (len == 0)
     return 0;
 
-  // Elegimos un “stride” coprimo con len y un desplazamiento a partir de la
-  // semilla
-  u64 stride = pick_stride(len, seed ^ (u64)rank);
-  u64 off0 = splitmix64(seed + 0xABCDEF) % len;
-
-  // Bucle: keys = start + ((off0 + i*stride) % len)
+  // Búsqueda secuencial simple - garantiza encontrar la clave
   for (u64 i = 0; i < len; ++i) {
-    u64 off = (off0 + i * stride) % len;
-    u64 key = start + off;
+    u64 key = start + i;
     if (try_key(key, cipher, clen, keyword)) {
       *found_key = key;
       return 1;

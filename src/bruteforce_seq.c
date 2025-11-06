@@ -18,7 +18,12 @@
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
-#include <openssl/des.h>
+
+#ifdef __APPLE__
+  #include <CommonCrypto/CommonCryptor.h>
+#else
+  #include <openssl/des.h>
+#endif
 
 #define PROGRESS_STEP 1000000ULL
 
@@ -91,7 +96,16 @@ unsigned char *read_file(const char *path, size_t *out_size) {
     return buf;
 }
 
-// convierte un entero de 0..(2^56-1) a DES_cblock (8 bytes)
+// convierte un entero de 0..(2^56-1) a clave DES (8 bytes)
+#ifdef __APPLE__
+void uint64_to_deskey(uint64_t v, unsigned char key[8]) {
+    for (int i = 0; i < 8; ++i) {
+        key[i] = (unsigned char)(v & 0xFFULL);
+        v >>= 8;
+    }
+    set_odd_parity(key);
+}
+#else
 void uint64_to_desblock(uint64_t v, DES_cblock *out) {
     // Llenamos los 8 bytes con el valor
     for (int i = 0; i < 8; ++i) {
@@ -101,8 +115,27 @@ void uint64_to_desblock(uint64_t v, DES_cblock *out) {
     // Luego establecemos bits de paridad (DES espera parity bits por byte)
     set_odd_parity(*out);
 }
+#endif
 
-// descifra buffer (enplace) usando la subkey schedule, ECB por bloques de 8 
+// descifra buffer usando DES ECB
+#ifdef __APPLE__
+int des_decrypt_buffer(unsigned char *buf, size_t len, unsigned char key[8]) {
+    size_t dataOutMoved = 0;
+    CCCryptorStatus status = CCCrypt(kCCDecrypt,           // operation
+                                     kCCAlgorithmDES,      // algorithm  
+                                     kCCOptionECBMode,     // options
+                                     key,                  // key
+                                     8,                    // key length
+                                     NULL,                 // IV
+                                     buf,                  // input
+                                     len,                  // input length
+                                     buf,                  // output (in-place)
+                                     len,                  // output buffer size
+                                     &dataOutMoved);       // output bytes
+
+    return (status == kCCSuccess) ? 0 : -1;
+}
+#else
 void des_ecb_decrypt_buffer(unsigned char *buf, size_t len, DES_key_schedule *ks) {
     DES_cblock inblk, outblk;
     for (size_t off = 0; off < len; off += 8) {
@@ -111,6 +144,7 @@ void des_ecb_decrypt_buffer(unsigned char *buf, size_t len, DES_key_schedule *ks
         memcpy(buf + off, outblk, 8);
     }
 }
+#endif
 
 double now_seconds() {
     struct timespec t;
@@ -171,11 +205,26 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+#ifdef __APPLE__
+    unsigned char key8[8];
+#else
     DES_cblock keyblock;
     DES_key_schedule ks;
+#endif
     uint64_t checked = 0;
 
     for (uint64_t k = start; k < end; ++k) {
+#ifdef __APPLE__
+        // convertir k a clave DES
+        uint64_to_deskey(k, key8);
+
+        // copiar buffer cifrado y descifrarlo en workbuf
+        memcpy(workbuf, cipher, cipher_len);
+        if (des_decrypt_buffer(workbuf, cipher_len, key8) != 0) {
+            checked++;
+            continue;
+        }
+#else
         // convertir k a bloque DES y setear paridad 
         uint64_to_desblock(k, &keyblock);
 
@@ -185,6 +234,7 @@ int main(int argc, char **argv) {
         // copiar buffer cifrado y descifrarlo en workbuf 
         memcpy(workbuf, cipher, cipher_len);
         des_ecb_decrypt_buffer(workbuf, cipher_len, &ks);
+#endif
 
         // buscar frase clave
         if (memmem(workbuf, cipher_len, key_phrase, strlen(key_phrase)) != NULL) {
